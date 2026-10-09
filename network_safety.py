@@ -38,7 +38,6 @@ for name, stats in activeInterfaces.items():
             for address in interfaces[name]:
                 # Check if the current address is an IPv4 address
                 if address.family == socket.AF_INET:
-                    print("IPv4 Address: ", address.address)
                     print("Subnet Mask: ", address.netmask)
                     print()
 

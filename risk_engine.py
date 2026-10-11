@@ -1,11 +1,11 @@
 # Always begin score at 100
 ORIGINAL_SCORE = 100
 
-test_risks = ["missing CSP", "no HTTPS", "missing HSTS"]
+test_risks = ["missing_csp", "no_https", "missing_hsts"]
 
-HIGH_RISK = ["missing CSP", "missing HSTS", "no HTTPS redirect"]
-MEDIUM_RISK = ["missing X-Content-Type-Options"]
-LOW_RISK = ["no HTTPS"]
+HIGH_RISK = ["no_https", "no_https_redirect"]
+MEDIUM_RISK = ["missing_hsts", "missing_csp"]
+LOW_RISK = ["missing_x_content_type_options"]
 
 def scoring_system(issues_list):
     score = ORIGINAL_SCORE

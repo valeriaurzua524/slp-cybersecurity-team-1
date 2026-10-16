@@ -2,37 +2,76 @@ import datetime
 import risk_engine
 
 test_risks = ["missing_csp", "no_https", "missing_hsts"]
+HIGH_RISK_LIST = risk_engine.HIGH_RISK
+MEDIUM_RISK_LIST = risk_engine.MEDIUM_RISK
+LOW_RISK_LIST = risk_engine.LOW_RISK
+
+
+empty_dictionary = {
+    "date": None,
+    "website": None,
+    "score": 100,
+    "risk_level": None,
+    "issue_count": 0,
+    "issue_list": [],
+}
+
+empty_issue = {
+    "issue": None,
+    "severity": None,
+    "recommendation": None,
+}
 
 def recommendations(issues_list):
-    issue_count = 0
+    risk_dictionary = empty_dictionary
+
+    # update date
+    risk_dictionary.update({"date": str(datetime.datetime.now())})
+
+    # update score
+    risk_dictionary.update({"score": risk_engine.scoring_system(issues_list)})
+
+    # update issue_count
+    risk_dictionary.update({"issue_count": len(issues_list)})
+
+    # update risk_level
+    if set(issues_list) & set(HIGH_RISK_LIST):
+        risk_dictionary.update({"risk_level": "high"})
+    elif set(issues_list) & set(MEDIUM_RISK_LIST):
+        risk_dictionary.update({"risk_level": "medium"})
+    elif set(issues_list) & set(LOW_RISK_LIST):
+        risk_dictionary.update({"risk_level": "low"})
+    else:
+        risk_dictionary.update({"risk_level": "none"})
+
+    # update issue_list
     for issue in issues_list:
-        print("Issue " + str(issue_count) + ": " + issue)
+        # creates the issue to be added
+        temporary_issue = empty_issue
+
+        temporary_issue.update({"issue": issue})
+
+        if issue in HIGH_RISK_LIST:
+            temporary_issue.update({"severity": "high"})
+        elif issue in MEDIUM_RISK_LIST:
+            temporary_issue.update({"severity": "medium"})
+        elif issue in LOW_RISK_LIST:
+            temporary_issue.update({"severity": "low"})
+
         match issue:
             case "no_https":
-                print("recommendation: get a TLS certificate and serve the site over HTTPS.")
-            case "missing_csp":
-                print("recommendation: add a Content-Security-Policy header to limit where scripts can load from.")
-            case "missing_hsts":
-                print("recommendation: add a Strict-Transport-Security (HSTS) header so browsers always use HTTPS.")
+                temporary_issue.update({"recommendation": "contact website owner or proceed at your own risk"})
             case "no_https_redirect":
-                print("Website lacks HTTPS redirect")
+                temporary_issue.update({"recommendation": "redirect all HTTP traffic to HTTPS"})
+            case "missing_hsts":
+                temporary_issue.update({"recommendation": "ensure connection is over HTTPS"})
+            case "missing_csp":
+                temporary_issue.update({"recommendation": "use caution when interacting with the website"})
             case "missing_x_content_type_options":
-                print("recommendation: add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.")
-        print("\n")
-        issue_count += 1
+                temporary_issue.update({"recommendation": "use caution when interacting with the website"})
 
-print("-----------------------------------")
-print("Website Security Report")
-print("-----------------------------------\n")
+        risk_dictionary["issue_list"].append(temporary_issue)
 
-print("date: " + str(datetime.datetime.now()))
-print("website: ")
-print("score: " + str(risk_engine.scoring_system(test_risks)) + "/100")
-print("risk level: ")
-print("\n")
+    return risk_dictionary
 
-print("issues found: " + str(len(test_risks)))
-print("\n")
-
-recommendations(test_risks)
-print("-----------------------------------")
+print(recommendations(test_risks))

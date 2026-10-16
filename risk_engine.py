@@ -15,7 +15,7 @@ def scoring_system(issues_list):
             score -= 10
         elif issue in MEDIUM_RISK:
             score -= 5
-        else:
+        elif issue in LOW_RISK:
             score -= 1
 
     return score

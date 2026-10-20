@@ -1,3 +1,4 @@
+# This program doesn't have website since the scanner will have that.
 import datetime
 import risk_engine
 
@@ -7,7 +8,7 @@ MEDIUM_RISK_LIST = risk_engine.MEDIUM_RISK
 LOW_RISK_LIST = risk_engine.LOW_RISK
 
 
-empty_dictionary = {
+EMPTY_DICTIONARY = {
     "date": None,
     "website": None,
     "score": 100,
@@ -16,14 +17,14 @@ empty_dictionary = {
     "issue_list": [],
 }
 
-empty_issue = {
+EMPTY_ISSUE = {
     "issue": None,
     "severity": None,
     "recommendation": None,
 }
 
 def recommendations(issues_list):
-    risk_dictionary = empty_dictionary
+    risk_dictionary = EMPTY_DICTIONARY
 
     # update date
     risk_dictionary.update({"date": str(datetime.datetime.now())})
@@ -47,7 +48,7 @@ def recommendations(issues_list):
     # update issue_list
     for issue in issues_list:
         # creates the issue to be added
-        temporary_issue = empty_issue
+        temporary_issue = EMPTY_ISSUE
 
         temporary_issue.update({"issue": issue})
 

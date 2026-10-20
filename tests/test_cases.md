@@ -1,7 +1,7 @@
 test cases - security scanner report
 
 these test cases describe what the scanner and report generator should do in different situations. for now, each one can be tested by changing fake_results in report_generator.py to match the input below and running:
-    python3 report_generator.py
+    python report_generator.py
 
 test case 1: normal HTTPS website (without issues)
     input: https://secure-example.com, uses HTTPS, has all three security headers, redirects HTTP to HTTPS
@@ -10,7 +10,7 @@ test case 1: normal HTTPS website (without issues)
         fake_results = {
             "website": "https://secure-example.com",
             "score": 100,
-            "risk_level": "Low",
+            "risk_level": "low",
             "issues": [],
         }
 
@@ -28,23 +28,23 @@ test case 2: HTTP website (without HTTPS)
         fake_results = {
             "website": "http://example.com",
             "score": 55,
-            "risk_level": "Moderate",
+            "risk_level": "high",
             "issues": [
                 {
-                    "issue": "No HTTPS",
-                    "severity": "High",
-                    "recommendation": "Get a TLS certificate and serve the site over HTTPS.",
+                    "issue": "no_https",
+                    "severity": "high",
+                    "recommendation": "get a TLS certificate and serve the site over HTTPS.",
                 },
                 {
-                    "issue": "No HTTP to HTTPS redirect",
-                    "severity": "Medium",
-                    "recommendation": "Redirect all HTTP traffic to HTTPS.",
+                    "issue": "no_https_redirect",
+                    "severity": "medium",
+                    "recommendation": "redirect all HTTP traffic to HTTPS.",
                 },
             ],
         }
 
     expected output:
-        issues listed: "no HTTPS" (high) and "not HTTP to HTTPS redirect"
+        issues listed: "No HTTPS" (high) and "No HTTP to HTTPS Redirect"
         score: lower than 100
         risk level: moderate or high
         recommendation: enable HTTPS
@@ -57,15 +57,15 @@ test case 3: missing security headers
         fake_results = {
             "website": "https://example.com",
             "score": 80,
-            "risk_level": "Low",
+            "risk_level": "moderate",
             "issues": [
                 {
-                    "issue": "missing Content-Security-Policy header",
+                    "issue": "missing_csp",
                     "severity": "medium",
                     "recommendation": "add a Content-Security-Policy header to limit where scripts can load from.",
                 },
                 {
-                    "issue": "missing X-Content-Type-Options header",
+                    "issue": "missing_x_content_type_options",
                     "severity": "low",
                     "recommendation": "add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.",
                 },
@@ -83,8 +83,8 @@ test case 4: invalid URL
 
     fake results to use:
         fake_results = {
-            "website": "not-a-real-webiste",
-            "error": invalid URL or website could not be reached",
+            "website": "not-a-real-website",
+            "error": "invalid URL or website could not be reached.",
         }
 
     expected output:
@@ -100,27 +100,27 @@ test case 5: multiple issues
         fake_results = {
             "website": "http://example.com",
             "score": 45,
-            "risk_level": "High",
+            "risk_level": "high",
             "issues": [
                 {
-                    "issue": "Missing X-Content-Type-Options header",
-                    "severity": "Low",
-                    "recommendation": "Add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.",
+                    "issue": "missing_x_content_type_options",
+                    "severity": "low",
+                    "recommendation": "add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.",
                 },
                 {
-                    "issue": "No HTTPS",
-                    "severity": "High",
-                    "recommendation": "Get a TLS certificate and serve the site over HTTPS.",
+                    "issue": "no_https",
+                    "severity": "high",
+                    "recommendation": "get a TLS certificate and serve the site over HTTPS.",
                 },
                 {
-                    "issue": "Missing Content-Security-Policy header",
-                    "severity": "Medium",
-                    "recommendation": "Add a Content-Security-Policy header to limit where scripts can load from.",
+                    "issue": "missing_csp",
+                    "severity": "medium",
+                    "recommendation": "add a Content-Security-Policy header to limit where scripts can load from.",
                 },
                 {
-                    "issue": "Missing Strict-Transport-Security header",
-                    "severity": "Medium",
-                    "recommendation": "Add a Strict-Transport-Security (HSTS) header so browsers always use HTTPS.",
+                    "issue": "missing_hsts",
+                    "severity": "medium",
+                    "recommendation": "add a Strict-Transport-Security (HSTS) header so browsers always use HTTPS.",
                 },
             ],
         }
@@ -132,4 +132,4 @@ test case 5: multiple issues
 
 
 
-these should all be tested with real websited instead of fake data.
+these should all be tested with real websites instead of fake data.

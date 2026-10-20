@@ -4,38 +4,51 @@
 # shows when scan happened
 from datetime import datetime
 
+# dictionary for ids to point to readable names
+ISSUE_NAMES = {
+    "no_https": "No HTTPS",
+    "missing_csp": "Missing Content-Security-Policy Header",
+    "missing_hsts": "Missing Strict-Transport-Security Header",
+    "missing_x_content_type_options": "Missing X-Content-Type-Options Header",
+    "no_https_redirect": "No HTTP to HTTPS Redirect",
+}
+
+# lower numbers = higher priority
+SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
+
 # dictionary to store info
 fake_results = {
-    "website": "https://example.com",       # website scanned
-    "score": 45,                            # security score out of 100
-    "risk_level": "high",                   # low/moderate/high
-    #list of dictionaries of each security problem
+    "website": "http://example.com",
+    "score": 45,
+    "risk_level": "High",
     "issues": [
         {
-            "issue": "no HTTPS",
-            "severity": "high",
-            "recommendation": "get a TLS certificate and serve the site over HTTPS.",
-        },
-        {
-            "issue": "missing Content-Security-Policy header",
-            "severity": "medium",
-            "recommendation": "add a Content-Security-Policy header to limit where scripts can load from.",
-        },
-        {
-            "issue": "missing Strict-Transport-Security header",
-            "severity": "medium",
-            "recommendation": "add a Strict-Transport-Security (HSTS) header so browsers always use HTTPS.",
-        },
-        {
-            "issue": "missing X-Content-Type-Options header",
+            "issue": "missing_x_content_type_options",
             "severity": "low",
-            "recommendation": "add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.",
+            "recommendation": "Add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.",
+        },
+        {
+            "issue": "no_https",
+            "severity": "high",
+            "recommendation": "Get a TLS certificate and serve the site over HTTPS.",
+        },
+        {
+            "issue": "missing_csp",
+            "severity": "medium",
+            "recommendation": "Add a Content-Security-Policy header.",
+        },
+        {
+            "issue": "missing_hsts",
+            "severity": "medium",
+            "recommendation": "Add a Strict-Transport-Security header so browsers always use HTTPS.",
         },
     ],
 }
 
-# severity order to place issues in report, lower numbers = higher priority
-SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
+def get_display_name(issue_id):
+    # turns id into readable name 
+    return ISSUE_NAMES.get(issue_id, issue_id.replace("_", " ").title())
+
 
 # generate report
 def generate_report(results):
@@ -55,9 +68,17 @@ def generate_report(results):
     # website info (or "unknown" if not found)
     lines.append(f"website: {results.get('website', 'Unknown')}")
 
+    # failed scan, show error message and exit early
+    if "error" in results:
+        lines.append("")
+        lines.append(f"scan failed: {results['error']}")
+        lines.append("Please check the URL and try again.")
+        lines.append("-" * 80)
+        return "\n".join(lines)
+
     # score and risk level
-    lines.append(f"score: {results['score']} / 100")
-    lines.append(f"risk level:  {results['risk_level']}")
+    lines.append(f"score: {results.get('score', 'N/A')} / 100")
+    lines.append(f"risk level: {results.get('risk_level', 'N/A')}")
     lines.append("")
 
     # issues (or empty list if not found)
@@ -72,12 +93,12 @@ def generate_report(results):
         lines.append(f"issues found ({len(issues)}):")
         # sort issues by severity
         sorted_issues = sorted(
-            issues, key=lambda item: SEVERITY_ORDER.get(item["severity"], 3)
+            issues, key=lambda item: SEVERITY_ORDER.get(item["severity"].lower(), 3)
         )
         # sorts and numbers issues
         for number, item in enumerate(sorted_issues, start=1):
-            lines.append(f"{number}. {item['issue']}")
-            lines.append(f" severity: {item['severity']}")
+            lines.append(f"{number}. {get_display_name(item['issue'])}")
+            lines.append(f" severity: {item['severity'].capitalize()}")
             lines.append(f" recommendation: {item['recommendation']}")
             # blank line between issues
             lines.append("")   

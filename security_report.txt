@@ -4,26 +4,26 @@ WEBSITE SECURITY REPORT
 
 --------------------------------------------------------------------------------
 
-date: 2026-10-08 17:34
-website: https://example.com
+date: 2026-10-20 16:39
+website: http://example.com
 score: 45 / 100
-risk level:  high
+risk level: High
 
 issues found (4):
-1. no HTTPS
- severity: high
- recommendation: get a TLS certificate and serve the site over HTTPS.
+1. No HTTPS
+ severity: High
+ recommendation: Get a TLS certificate and serve the site over HTTPS.
 
-2. missing Content-Security-Policy header
- severity: medium
- recommendation: add a Content-Security-Policy header to limit where scripts can load from.
+2. Missing Content-Security-Policy Header
+ severity: Medium
+ recommendation: Add a Content-Security-Policy header.
 
-3. missing Strict-Transport-Security header
- severity: medium
- recommendation: add a Strict-Transport-Security (HSTS) header so browsers always use HTTPS.
+3. Missing Strict-Transport-Security Header
+ severity: Medium
+ recommendation: Add a Strict-Transport-Security header so browsers always use HTTPS.
 
-4. missing X-Content-Type-Options header
- severity: low
- recommendation: add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.
+4. Missing X-Content-Type-Options Header
+ severity: Low
+ recommendation: Add 'X-Content-Type-Options: nosniff' to stop browsers guessing file types.
 
 --------------------------------------------------------------------------------

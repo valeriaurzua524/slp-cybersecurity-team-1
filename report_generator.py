@@ -6,7 +6,6 @@
 # shows when scan happened
 from datetime import datetime
 
-
 # dictionary for ids to point to readable names
 ISSUE_NAMES = {
     "no_https": "No HTTPS",

@@ -8,7 +8,6 @@
 import platform
 import subprocess
 
-
 def check_firewall_status():
 
     operating_system = platform.system()

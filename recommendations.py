@@ -9,7 +9,6 @@ HIGH_RISK_LIST = risk_engine.HIGH_RISK
 MEDIUM_RISK_LIST = risk_engine.MEDIUM_RISK
 LOW_RISK_LIST = risk_engine.LOW_RISK
 
-
 def recommendations(scan_results):
 
     # get website and issues from scanner results

@@ -11,7 +11,6 @@ def run_website_scan(url):
     """
 
     scan_results = website_scanner(url)
-
     final_results = recommendations(scan_results)
 
     return final_results
@@ -32,6 +31,10 @@ def run_network_scan():
 
 
 def main():
+    """
+    Terminal version used for testing the integrated backend.
+    """
+
     while True:
         print("\nCYBERSECURITY VULNERABILITY & NETWORK SAFETY SCANNER")
         print("---------------------------------------------------")
@@ -106,11 +109,16 @@ def main():
             )
 
         elif choice == "3":
+
             print("\nExiting scanner.")
             break
 
         else:
-            print("\nInvalid option. Please choose 1, 2, or 3.")
+
+            print(
+                "\nInvalid option. "
+                "Please choose 1, 2, or 3."
+            )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,6 @@ import platform
 import socket
 import psutil
 
-
 def get_network_info():
     """
     Collects basic network information from the user's device.

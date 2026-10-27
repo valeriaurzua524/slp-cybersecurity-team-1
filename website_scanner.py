@@ -6,7 +6,6 @@ from requests.exceptions import MissingSchema, InvalidSchema, InvalidURL, Reques
 # Original component: Heaven
 # Integration/compatibility updates: Valeria
 
-
 def website_scanner(url):
 
     issues = []

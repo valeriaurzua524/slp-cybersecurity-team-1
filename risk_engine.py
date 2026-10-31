@@ -17,10 +17,10 @@ def scoring_system(issues_list):
 
     for issue in issues_list:
         if issue in HIGH_RISK:
-            score -= 10
+            score -= 20
         elif issue in MEDIUM_RISK:
-            score -= 5
+            score -= 10
         elif issue in LOW_RISK:
-            score -= 1
+            score -= 5
 
     return max(score, 0)

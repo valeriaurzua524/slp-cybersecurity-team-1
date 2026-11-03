@@ -40,19 +40,19 @@ def generate_report(results):
     # header
     lines.append("-" * 80)
     lines.append("")
-    lines.append("WEBSITE SECURITY REPORT")
+    lines.append("Website Security Report".center(80))
     lines.append("")
     lines.append("-" * 80)
     lines.append("")
 
     # current date and time
     lines.append(
-        f"date: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
     )
 
     # website info
     lines.append(
-        f"website: {results.get('website', 'Unknown')}"
+        f"Website: {results.get('website', 'Unknown')}"
     )
 
     # failed scan, show error message and exit early
@@ -60,13 +60,13 @@ def generate_report(results):
 
         lines.append("")
         lines.append(
-            f"scan failed: {results['error']}"
+            f"Scan failed: {results['error']}"
         )
 
         # show extra scanner details if available
         if results.get("message"):
             lines.append(
-                f"details: {results['message']}"
+                f"Details: {results['message']}"
             )
 
         lines.append(
@@ -80,16 +80,18 @@ def generate_report(results):
     # show final URL if scanner returned one
     if results.get("final_url"):
         lines.append(
-            f"final URL: {results['final_url']}"
+            f"Final URL: {results['final_url']}"
         )
+
+    lines.append("")
 
     # score and risk level
     lines.append(
-        f"score: {results.get('score', 'N/A')} / 100"
+        f"Score: {results.get('score', 'N/A')} / 100"
     )
 
     lines.append(
-        f"risk level: {str(results.get('risk_level', 'N/A')).capitalize()}"
+        f"Risk level: {str(results.get('risk_level', 'N/A')).capitalize()}"
     )
 
     lines.append("")
@@ -99,12 +101,12 @@ def generate_report(results):
 
     # if no issues found
     if not issues:
-        lines.append("no issues found.")
+        lines.append("No issues found.")
 
     # list every issue
     else:
         lines.append(
-            f"issues found ({len(issues)}):"
+            f"Issues found ({len(issues)}):"
         )
 
         # sort issues by severity
@@ -127,11 +129,11 @@ def generate_report(results):
             )
 
             lines.append(
-                f" severity: {item['severity'].capitalize()}"
+                f" Severity: {item['severity'].capitalize()}"
             )
 
             lines.append(
-                f" recommendation: {item['recommendation']}"
+                f" Recommendation: {item['recommendation']}"
             )
 
             # blank line between issues
@@ -158,5 +160,5 @@ def save_report(
         file.write(report_text)
 
     print(
-        f"\nreport saved to {filename}"
+        f"\nReport saved to {filename}"
     )

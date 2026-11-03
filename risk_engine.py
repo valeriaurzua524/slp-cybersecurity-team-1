@@ -8,6 +8,7 @@ HIGH_RISK = ["no_https", "no_https_redirect"]
 MEDIUM_RISK = ["missing_hsts", "missing_csp"]
 LOW_RISK = ["missing_x_content_type_options"]
 
+
 def scoring_system(issues_list):
     """
     Calculates a security score starting from 100.
@@ -17,10 +18,10 @@ def scoring_system(issues_list):
 
     for issue in issues_list:
         if issue in HIGH_RISK:
-            score -= 10
+            score -= 20
         elif issue in MEDIUM_RISK:
-            score -= 5
+            score -= 10
         elif issue in LOW_RISK:
-            score -= 1
+            score -= 5
 
     return max(score, 0)

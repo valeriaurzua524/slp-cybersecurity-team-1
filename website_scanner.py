@@ -1,10 +1,14 @@
 import requests
 from requests.exceptions import MissingSchema, InvalidSchema, InvalidURL, RequestException
+from urllib.parse import urljoin, urlsplit
 
 def website_scanner(url):
     #Initialize lists
     results = []
     issues = []
+
+    results.append(url)
+
     try:
         res = requests.get(url, allow_redirects= False, timeout= 5)
 
@@ -16,17 +20,20 @@ def website_scanner(url):
 
         #check if url uses http
         if res.url.startswith("http://"):
-            print(f"This url '{url}' uses http")
 
-            res = requests.get(url, allow_redirects= True)
-            #checks if url redirects to https
-            if res.status_code in (301, 302) and "https" in res.headers.get("Location", ""):
-                print(f"This url '{url}' redirects to https")
+            redirect_res = requests.get(url, allow_redirects=True, timeout=5)
+            redirects_to_https = any(
+                urlsplit(response.url).scheme.lower() == "http"
+                and urlsplit(urljoin(response.url, response.headers.get("Location", ""))).scheme.lower() == "https"
+                for response in redirect_res.history
+            )
+            if redirects_to_https:
+                results.append("redirects_to_https")
             else:
-                print(f"This url '{url}' does not redirect from http")
+                results.append("uses_http")
         else:
             #check is url uses https
-            print(f"This url '{url}' uses https")
+            results.append("uses_https")
 
         if csp is None:
             issues.append("missing_csp")
@@ -37,7 +44,6 @@ def website_scanner(url):
         if xcto is None:
             issues.append("missing_xcto")
         
-        results.append(url)
         results.append(issues)
         
     except MissingSchema as e:

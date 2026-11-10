@@ -5,6 +5,7 @@
 import platform
 import socket
 import psutil
+import subprocess
 
 def get_network_info():
     """
@@ -31,6 +32,20 @@ def get_network_info():
     local_ip = None
     subnet_mask = None
 
+    # Get primary network interface from the macOS routing table
+    result = subprocess.run(["route", "-n", "get", "default"], capture_output=True, text=True)
+
+    # Find the interface used for the default route
+    # .returncode - attribute provided by the subprocess result object (exit status)
+    if result.returncode == 0:
+        # Go through every line of text returned by the terminal command
+        for line in result.stdout.splitlines():
+            # After removing extra spaces, does this line start with interface?
+            if line.strip().startswith("interface:"):
+                # Take text after :, remove any extra spaces, save in primary_interface
+                primary_interface = line.split(":", 1)[1].strip()
+                break
+
     # Find active interfaces that have IPv4 addresses
     for name, stats in interface_stats.items():
 
@@ -56,10 +71,9 @@ def get_network_info():
 
                 active_interfaces.append(interface_info)
 
-                # Use the first non-loopback IPv4 interface
-                # as the primary interface for now
-                if primary_interface is None:
-                    primary_interface = name
+                # Get the IP address and subnet mask of the primary interface
+                if name == primary_interface:
+                    # Only save the IP address and subnet mask if they belong to that specific interface
                     local_ip = address.address
                     subnet_mask = address.netmask
 

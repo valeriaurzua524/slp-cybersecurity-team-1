@@ -24,6 +24,13 @@ def get_network_info():
     os_name = platform.system()
     os_version = platform.release()
 
+    # User-friendly OS name (mac)
+    display_os = os_name
+
+    if os_name == "Darwin":
+        display_os = "macOS"
+        os_version = platform.mac_ver()[0]
+
     interfaces = psutil.net_if_addrs()
     interface_stats = psutil.net_if_stats()
 
@@ -181,7 +188,7 @@ def get_network_info():
                     subnet_mask = address.netmask
 
     return {
-        "operating_system": os_name,
+        "operating_system": display_os,
         "os_version": os_version,
         "primary_interface": primary_interface,
         "connection_type": connection_type,

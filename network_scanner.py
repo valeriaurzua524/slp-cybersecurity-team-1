@@ -6,6 +6,7 @@ import platform
 import socket
 import psutil
 import subprocess
+import ipaddress
 
 def get_network_info():
     """
@@ -159,6 +160,10 @@ def get_network_info():
         for address in interfaces[name]:
 
             if address.family == socket.AF_INET:
+
+                # Skip loopback IP addresses
+                if ipaddress.ip_address(address.address).is_loopback:
+                    continue
 
                 interface_info = {
                     "name": name,

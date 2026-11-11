@@ -115,6 +115,24 @@ def recommendations(scan_results):
                     "use caution when interacting with the website"
                 })
 
+            case "missing_x_frame_options":
+                temporary_issue.update({
+                    "recommendation":
+                    "use caution when interacting with the website"
+                })
+
+            case "missing_referrer_policy":
+                temporary_issue.update({
+                    "recommendation":
+                    "be wary of when entering sensitive information"
+                })
+
+            case "missing_permissions_policy":
+                temporary_issue.update({
+                    "recommendation":
+                    "website should be safe, but exercise caution"
+                })
+
         risk_dictionary["issues"].append(temporary_issue)
 
     return risk_dictionary

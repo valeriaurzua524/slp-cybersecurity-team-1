@@ -31,6 +31,7 @@ def get_network_info():
     primary_interface = None
     local_ip = None
     subnet_mask = None
+    connection_type = "Unknown"
 
     # Get primary network interface from the macOS routing table
     result = subprocess.run(["route", "-n", "get", "default"], capture_output=True, text=True)
@@ -45,6 +46,27 @@ def get_network_info():
                 # Take text after :, remove any extra spaces, save in primary_interface
                 primary_interface = line.split(":", 1)[1].strip()
                 break
+
+    # Identify whether the primary interface uses Wi-Fi or Ethernet
+    if os_name == "Darwin" and primary_interface is not None:
+        result = subprocess.run(["networksetup", "-listallhardwareports"], capture_output=True, text=True)
+
+        if result.returncode == 0:
+            hardware_port = None
+            for line in result.stdout.splitlines():
+                line = line.strip()
+                if line.startswith("Hardware Port: "):
+                    hardware_port = line.split(":", 1)[1].strip()
+
+                if line.startswith("Device:"):
+                    device = line.split(":", 1)[1].strip()
+
+                    if device == primary_interface:
+                        if hardware_port == "Wi-Fi":
+                            connection_type = "Wi-Fi"
+                        elif hardware_port is not None and "Ethernet" in hardware_port:
+                            connection_type = "Ethernet"
+                        break
 
     # Find active interfaces that have IPv4 addresses
     for name, stats in interface_stats.items():
@@ -81,6 +103,7 @@ def get_network_info():
         "operating_system": os_name,
         "os_version": os_version,
         "primary_interface": primary_interface,
+        "connection_type": connection_type,
         "local_ip": local_ip,
         "subnet_mask": subnet_mask,
         "active_interfaces": active_interfaces,
@@ -105,6 +128,11 @@ def main():
     print(
         f"Primary Interface: "
         f"{results['primary_interface']}"
+    )
+
+    print(
+        f"Connection Type: "
+        f"{results['connection_type']}"
     )
 
     print(

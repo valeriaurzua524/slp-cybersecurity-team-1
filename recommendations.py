@@ -1,4 +1,4 @@
-# This program doesn't have website since the scanner will have that.
+# Recommendations
 # Original component: Brett
 # Integration/compatibility updates: Valeria
 
@@ -8,6 +8,7 @@ import risk_engine
 HIGH_RISK_LIST = risk_engine.HIGH_RISK
 MEDIUM_RISK_LIST = risk_engine.MEDIUM_RISK
 LOW_RISK_LIST = risk_engine.LOW_RISK
+
 
 def recommendations(scan_results):
 
@@ -88,7 +89,7 @@ def recommendations(scan_results):
             case "no_https":
                 temporary_issue.update({
                     "recommendation":
-                    "contact website owner or proceed at your own risk"
+                    "contact the website owner or proceed with caution because HTTPS is not available"
                 })
 
             case "no_https_redirect":
@@ -100,19 +101,43 @@ def recommendations(scan_results):
             case "missing_hsts":
                 temporary_issue.update({
                     "recommendation":
-                    "ensure connection is over HTTPS"
+                    "enable Strict-Transport-Security to help enforce HTTPS connections"
                 })
 
             case "missing_csp":
                 temporary_issue.update({
                     "recommendation":
-                    "use caution when interacting with the website"
+                    "configure a Content-Security-Policy to restrict untrusted content and scripts"
                 })
 
             case "missing_x_content_type_options":
                 temporary_issue.update({
                     "recommendation":
-                    "use caution when interacting with the website"
+                    "set X-Content-Type-Options to nosniff to help prevent MIME-type sniffing"
+                })
+
+            case "missing_x_frame_options":
+                temporary_issue.update({
+                    "recommendation":
+                    "use X-Frame-Options or CSP frame-ancestors to help prevent clickjacking"
+                })
+
+            case "missing_referrer_policy":
+                temporary_issue.update({
+                    "recommendation":
+                    "configure Referrer-Policy to limit referrer information shared with other websites"
+                })
+
+            case "missing_permissions_policy":
+                temporary_issue.update({
+                    "recommendation":
+                    "configure Permissions-Policy to restrict unnecessary browser features such as camera, microphone, and geolocation"
+                })
+
+            case _:
+                temporary_issue.update({
+                    "recommendation":
+                    "review this security finding"
                 })
 
         risk_dictionary["issues"].append(temporary_issue)

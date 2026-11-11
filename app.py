@@ -1,6 +1,6 @@
-#Streamlit frontend
-#Original component: Alina
-#Integration/compatibility updates: Valeria
+# Streamlit frontend
+# Original component: Alina
+# Integration/compatibility updates: Valeria
 
 import streamlit as st
 import time
@@ -11,6 +11,8 @@ from report_generator import generate_report, ISSUE_NAMES
 
 st.title("Cybersecurity Vulnerability & Network Safety Scanner")
 st.write("SLP cybersecurity team #1 :))")
+
+
 # =========================================================
 # WEBSITE SECURITY SCANNER
 # =========================================================
@@ -161,6 +163,11 @@ if st.button("Check Network"):
     st.write(
         f"Primary Interface: "
         f"**{network['primary_interface']}**"
+    )
+
+    st.write(
+        f"Connection Type: "
+        f"**{network.get('connection_type', 'Unknown')}**"
     )
 
     st.write(

@@ -6,6 +6,7 @@ import platform
 import socket
 import psutil
 import subprocess
+import ipaddress
 
 
 def get_network_info():
@@ -25,6 +26,17 @@ def get_network_info():
     os_name = platform.system()
     os_version = platform.release()
 
+    # User-friendly operating system name
+    display_os = os_name
+
+    if os_name == "Darwin":
+        display_os = "macOS"
+
+        mac_version = platform.mac_ver()[0]
+
+        if mac_version:
+            os_version = mac_version
+
     interfaces = psutil.net_if_addrs()
     interface_stats = psutil.net_if_stats()
 
@@ -35,9 +47,10 @@ def get_network_info():
     subnet_mask = None
     connection_type = "Unknown"
 
-    # -------------------------------------------------
-    # macOS primary interface + connection type detection
-    # -------------------------------------------------
+    # =========================================================
+    # macOS
+    # =========================================================
+
     if os_name == "Darwin":
 
         try:
@@ -49,56 +62,214 @@ def get_network_info():
             )
 
             if result.returncode == 0:
+
                 for line in result.stdout.splitlines():
+
                     if line.strip().startswith("interface:"):
-                        primary_interface = line.split(":", 1)[1].strip()
+
+                        primary_interface = (
+                            line
+                            .split(":", 1)[1]
+                            .strip()
+                        )
+
                         break
 
-        except Exception:
+        except (
+            FileNotFoundError,
+            subprocess.SubprocessError
+        ):
             primary_interface = None
 
-        # Identify whether the primary interface uses Wi-Fi or Ethernet
+        # Identify whether primary interface is Wi-Fi or Ethernet
         if primary_interface is not None:
 
             try:
+
                 result = subprocess.run(
-                    ["networksetup", "-listallhardwareports"],
+                    [
+                        "networksetup",
+                        "-listallhardwareports"
+                    ],
                     capture_output=True,
                     text=True
                 )
 
                 if result.returncode == 0:
+
                     hardware_port = None
 
                     for line in result.stdout.splitlines():
+
                         line = line.strip()
 
-                        if line.startswith("Hardware Port:"):
-                            hardware_port = line.split(":", 1)[1].strip()
+                        if line.startswith(
+                            "Hardware Port:"
+                        ):
 
-                        elif line.startswith("Device:"):
-                            device = line.split(":", 1)[1].strip()
+                            hardware_port = (
+                                line
+                                .split(":", 1)[1]
+                                .strip()
+                            )
+
+                        elif line.startswith(
+                            "Device:"
+                        ):
+
+                            device = (
+                                line
+                                .split(":", 1)[1]
+                                .strip()
+                            )
 
                             if device == primary_interface:
 
                                 if hardware_port == "Wi-Fi":
-                                    connection_type = "Wi-Fi"
+
+                                    connection_type = (
+                                        "Wi-Fi"
+                                    )
 
                                 elif (
                                     hardware_port is not None
-                                    and "Ethernet" in hardware_port
+                                    and "Ethernet"
+                                    in hardware_port
                                 ):
-                                    connection_type = "Ethernet"
+
+                                    connection_type = (
+                                        "Ethernet"
+                                    )
 
                                 break
 
-            except Exception:
+            except (
+                FileNotFoundError,
+                subprocess.SubprocessError
+            ):
                 connection_type = "Unknown"
 
-    # -------------------------------------------------
-    # Cross-platform fallback
-    # Windows / Linux / other operating systems
-    # -------------------------------------------------
+    # =========================================================
+    # Windows
+    # =========================================================
+
+    elif os_name == "Windows":
+
+        try:
+
+            result = subprocess.run(
+                ["route", "print", "-4"],
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode == 0:
+
+                default_routes = []
+
+                for line in result.stdout.splitlines():
+
+                    columns = line.split()
+
+                    if (
+                        len(columns) == 5
+                        and columns[0] == "0.0.0.0"
+                        and columns[1] == "0.0.0.0"
+                    ):
+
+                        try:
+
+                            route_ip = columns[3]
+                            metric = int(
+                                columns[4]
+                            )
+
+                            default_routes.append(
+                                (
+                                    metric,
+                                    route_ip
+                                )
+                            )
+
+                        except ValueError:
+                            continue
+
+                # Lowest metric is usually preferred route
+                for metric, route_ip in sorted(
+                    default_routes
+                ):
+
+                    for name, addresses in (
+                        interfaces.items()
+                    ):
+
+                        for address in addresses:
+
+                            if (
+                                address.family
+                                == socket.AF_INET
+                                and address.address
+                                == route_ip
+                            ):
+
+                                primary_interface = (
+                                    name
+                                )
+
+                                local_ip = (
+                                    address.address
+                                )
+
+                                subnet_mask = (
+                                    address.netmask
+                                )
+
+                                break
+
+                        if (
+                            primary_interface
+                            is not None
+                        ):
+                            break
+
+                    if (
+                        primary_interface
+                        is not None
+                    ):
+                        break
+
+        except (
+            FileNotFoundError,
+            subprocess.SubprocessError
+        ):
+            primary_interface = None
+
+        if primary_interface is not None:
+
+            name_lower = (
+                primary_interface.lower()
+            )
+
+            if (
+                "wi-fi" in name_lower
+                or "wifi" in name_lower
+                or "wireless" in name_lower
+                or "wlan" in name_lower
+            ):
+
+                connection_type = "Wi-Fi"
+
+            elif (
+                "ethernet" in name_lower
+                or "eth" in name_lower
+            ):
+
+                connection_type = "Ethernet"
+
+    # =========================================================
+    # Linux / other operating systems
+    # =========================================================
+
     else:
 
         for name, stats in interface_stats.items():
@@ -106,7 +277,10 @@ def get_network_info():
             if not stats.isup:
                 continue
 
-            if name in ("lo0", "lo"):
+            if name in (
+                "lo0",
+                "lo"
+            ):
                 continue
 
             if name not in interfaces:
@@ -114,46 +288,77 @@ def get_network_info():
 
             for address in interfaces[name]:
 
-                if address.family == socket.AF_INET:
+                if (
+                    address.family
+                    == socket.AF_INET
+                ):
 
-                    if not address.address.startswith("127."):
+                    try:
 
-                        primary_interface = name
-                        local_ip = address.address
-                        subnet_mask = address.netmask
+                        ip_object = (
+                            ipaddress.ip_address(
+                                address.address
+                            )
+                        )
 
-                        # Try to identify connection type from interface name
-                        name_lower = name.lower()
+                    except ValueError:
+                        continue
 
-                        if (
-                            "wi-fi" in name_lower
-                            or "wifi" in name_lower
-                            or "wireless" in name_lower
-                            or "wlan" in name_lower
-                        ):
-                            connection_type = "Wi-Fi"
+                    if ip_object.is_loopback:
+                        continue
 
-                        elif (
-                            "ethernet" in name_lower
-                            or "eth" in name_lower
-                            or "en" in name_lower
-                        ):
-                            connection_type = "Ethernet"
+                    primary_interface = name
+                    local_ip = (
+                        address.address
+                    )
+                    subnet_mask = (
+                        address.netmask
+                    )
 
-                        break
+                    name_lower = (
+                        name.lower()
+                    )
+
+                    if (
+                        "wi-fi" in name_lower
+                        or "wifi" in name_lower
+                        or "wireless" in name_lower
+                        or "wlan" in name_lower
+                    ):
+
+                        connection_type = (
+                            "Wi-Fi"
+                        )
+
+                    elif (
+                        "ethernet" in name_lower
+                        or name_lower.startswith(
+                            "eth"
+                        )
+                    ):
+
+                        connection_type = (
+                            "Ethernet"
+                        )
+
+                    break
 
             if primary_interface is not None:
                 break
 
-    # -------------------------------------------------
-    # Collect all active IPv4 interfaces
-    # -------------------------------------------------
+    # =========================================================
+    # Collect active IPv4 interfaces
+    # =========================================================
+
     for name, stats in interface_stats.items():
 
         if not stats.isup:
             continue
 
-        if name in ("lo0", "lo"):
+        if name in (
+            "lo0",
+            "lo"
+        ):
             continue
 
         if name not in interfaces:
@@ -161,40 +366,76 @@ def get_network_info():
 
         for address in interfaces[name]:
 
-            if address.family == socket.AF_INET:
+            if (
+                address.family
+                != socket.AF_INET
+            ):
+                continue
 
-                if address.address.startswith("127."):
-                    continue
+            try:
 
-                interface_info = {
-                    "name": name,
-                    "ip_address": address.address,
-                    "subnet_mask": address.netmask,
-                    "status": "up",
-                }
+                ip_object = (
+                    ipaddress.ip_address(
+                        address.address
+                    )
+                )
 
-                active_interfaces.append(interface_info)
+            except ValueError:
+                continue
 
-                # On macOS, fill IP information for the detected
-                # primary interface
-                if (
-                    os_name == "Darwin"
-                    and name == primary_interface
-                ):
-                    local_ip = address.address
-                    subnet_mask = address.netmask
+            if ip_object.is_loopback:
+                continue
 
-    # -------------------------------------------------
-    # Final fallback in case primary interface was
-    # not detected by the earlier logic
-    # -------------------------------------------------
-    if primary_interface is None and active_interfaces:
+            interface_info = {
+                "name": name,
+                "ip_address": address.address,
+                "subnet_mask": address.netmask,
+                "status": "up",
+            }
 
-        primary_interface = active_interfaces[0]["name"]
-        local_ip = active_interfaces[0]["ip_address"]
-        subnet_mask = active_interfaces[0]["subnet_mask"]
+            active_interfaces.append(
+                interface_info
+            )
 
-        name_lower = primary_interface.lower()
+            # Fill primary interface IP details
+            if name == primary_interface:
+
+                local_ip = (
+                    address.address
+                )
+
+                subnet_mask = (
+                    address.netmask
+                )
+
+    # =========================================================
+    # Final fallback
+    # =========================================================
+
+    if (
+        primary_interface is None
+        and active_interfaces
+    ):
+
+        primary_interface = (
+            active_interfaces[0]["name"]
+        )
+
+        local_ip = (
+            active_interfaces[0][
+                "ip_address"
+            ]
+        )
+
+        subnet_mask = (
+            active_interfaces[0][
+                "subnet_mask"
+            ]
+        )
+
+        name_lower = (
+            primary_interface.lower()
+        )
 
         if (
             "wi-fi" in name_lower
@@ -202,16 +443,22 @@ def get_network_info():
             or "wireless" in name_lower
             or "wlan" in name_lower
         ):
+
             connection_type = "Wi-Fi"
 
         elif (
             "ethernet" in name_lower
-            or "eth" in name_lower
+            or name_lower.startswith("eth")
         ):
+
             connection_type = "Ethernet"
 
+    # =========================================================
+    # Return results
+    # =========================================================
+
     return {
-        "operating_system": os_name,
+        "operating_system": display_os,
         "os_version": os_version,
         "primary_interface": primary_interface,
         "connection_type": connection_type,
@@ -233,7 +480,8 @@ def main():
 
     print(
         f"Operating System: "
-        f"{results['operating_system']} {results['os_version']}"
+        f"{results['operating_system']} "
+        f"{results['os_version']}"
     )
 
     print(
@@ -256,13 +504,24 @@ def main():
         f"{results['subnet_mask']}"
     )
 
-    print("\nActive IPv4 Interfaces:")
+    print(
+        "\nActive IPv4 Interfaces:"
+    )
 
-    if not results["active_interfaces"]:
-        print("No active IPv4 interfaces found.")
+    if not results[
+        "active_interfaces"
+    ]:
+
+        print(
+            "No active IPv4 interfaces found."
+        )
 
     else:
-        for interface in results["active_interfaces"]:
+
+        for interface in results[
+            "active_interfaces"
+        ]:
+
             print(
                 f"- {interface['name']}: "
                 f"{interface['ip_address']} "
